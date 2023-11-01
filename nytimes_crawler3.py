@@ -1,7 +1,7 @@
 """
 봇 탐지를 우회하는 코드 : 디버거 크롬 사용
-크롬을 debug 모드로 열어서 debugging port 를 열어두고, debugging port 를 통해 크롬을 제어한다.
-이렇게 하면 실제 일반 크롬 브라우저가 열린 것이기 때문에 서버에서는 매크로 프로그램인 것을 알아차리기가 쉽지 않다.
+
+자바스크립트를 안쓰고 로그인 하는 방법은 쉽게 말하면 element 의 click(), send_keys() 와 같은 메소드를 피하는 것 -> 복사해서 붙여넣기 혹은 크롬에 아이디,비번 저장
 """
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -24,44 +24,46 @@ except FileNotFoundError:
     pass
 
 
-# 1. 크롬 브라우저 실행 (디버거 모드로 구동)
+# 1. 크롬 브라우저 수동 실행
 # --remote-debugging-port=9222    : 크롬 포트
 # --user-data-dir="C:\chrometemp" : 크롬을 사용하여 웹상을 돌아다녔을 때 생기는 쿠키와 캐쉬파일을 저장하는 곳
-subprocess.Popen(
-    r'C:\Program Files\Google\Chrome\Application\chrome.exe ' 
-    r'--remote-debugging-port=9222 '
-    r'--user-data-dir="C:\chrometemp"'
-    ) 
+subprocess.Popen(r'C:\Program Files\Google\Chrome\Application\chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\chrometemp"') # 디버거 크롬 구동
 
+
+#-----------------------------------------------------------------------------------------------
+# Chrome WebDriver 실행 파일의 경로를 설정.
+webdriver_path = r'C:\Users\thheo\Documents\selenium_test\chromedriver.exe'
+
+
+# IP 우회 프록시 설정 - tor
+proxy = Proxy()
+proxy.proxy_type = ProxyType.MANUAL
+proxy.http_proxy = "127.0.0.1:9150"
+proxy.socks_proxy = "127.0.0.1:9150"
+proxy.ssl_proxy = "127.0.0.1:9150"
 
 
 # 2. 셀레니움 크롬창 제어
 chrome_option = webdriver.ChromeOptions()
-chrome_option.add_argument('--no-sandbox')
-chrome_option.add_argument('--disable-dev-shm-usage')
-chrome_option.add_argument('--ignore-certificate-errors')
 chrome_option.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
+chrome_option.add_argument('--proxy-server=%s' % proxy)  # 프록시를 Chrome 옵션에 추가
+
+# Chrome WebDriver의 Service를 직접 생성.
+service = Service(webdriver_path)
+driver = webdriver.Chrome(service=service, options=chrome_option)
 
 
-webdriver_path = r'C:\Users\thheo\Documents\selenium_test\chromedriver.exe' # 크롬 웹드라이버 실행 파일 경로 설정
-service = Service(webdriver_path)                                           # 크롬 웹드라이버 Service 설정
-driver = webdriver.Chrome(service=service, options=chrome_option)           # 웹 드라이버 생성
 
+driver.implicitly_wait(15)
 
-driver.implicitly_wait(5)
-
-
-# 뉴욕타임스 Root페이지 접속
-# driver.get("https://www.nytimes.com/") 
+# ip 우회 test : 현재 ip 반환하는 페이지 접속
+driver.get('http://icanhazip.com/')
 
 # 뉴욕타임스 로그인페이지 접속
-driver.get(r'https://myaccount.nytimes.com/auth/login?response_type=cookie&client_id=vi&redirect_uri=https%3A%2F%2Fwww.nytimes.com%2Fsubscription%2Fonboarding-offer%3FcampaignId%3D7JFJX%26EXIT_URI%3Dhttps%253A%252F%252Fwww.nytimes.com%252F&asset=masthead')
+# driver.get("https://www.nytimes.com/")
+# driver.get(r'https://myaccount.nytimes.com/auth/login?response_type=cookie&client_id=vi&redirect_uri=https%3A%2F%2Fwww.nytimes.com%2Fsubscription%2Fonboarding-offer%3FcampaignId%3D7JFJX%26EXIT_URI%3Dhttps%253A%252F%252Fwww.nytimes.com%252F&asset=masthead')
 
-
-
-
-
-
+print(driver.page_source)
 time.sleep(15)
 print("exit")
 driver.quit()
