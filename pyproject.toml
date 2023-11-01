@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "selenium-test"
+version = "0.1.0"
+description = ""
+authors = ["or-m-or <htth815@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+charset-normalizer = "3.3.1"
+requests = "^2.31.0"
+selenium = "^4.14.0"
+chromedriver-autoinstaller = "^0.6.2"
+pyperclip = "^1.8.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
